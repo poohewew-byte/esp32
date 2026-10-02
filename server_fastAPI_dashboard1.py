@@ -24,7 +24,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-DB_CONFIG = "dbname=iot_database user=postgres password=pooh host=127.0.0.1 port=5432"
+DB_CONFIG = "postgresql://neondb_owner:password@ep-xyz-singapore.aws.neon.tech/neondb?sslmode=require"
 
 # --- Schema ข้อมูล ---
 class TelemetryInput(BaseModel):
