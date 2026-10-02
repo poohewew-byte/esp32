@@ -24,7 +24,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-DB_CONFIG = "postgresql://neondb_owner:npg_Dle4RSfs8TqC@ep-steep-paper-b470gr9e-pooler.c-6.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+DB_CONFIG = "postgresql://neondb_owner:npg_D1e4RSfs8TqC@ep-steep-paper-b470gr9e-pooler.c-6.us-east-2.aws.neon.tech/neondb?sslmode=require"
 
 # --- Schema ข้อมูล ---
 class TelemetryInput(BaseModel):
