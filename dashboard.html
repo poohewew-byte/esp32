@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Sensor Dashboard</title>
+    <!-- Chart.js สำหรับวาดกราฟ -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- ฟอนต์ Kanit -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Kanit', sans-serif;
+        }
+
+        body {
+            background-color: #1a1d24;
+            color: #e2e8f0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            color: #b794f4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .header p {
+            color: #a0aec0;
+            font-size: 0.9rem;
+        }
+
+        /* API Bar */
+        .api-card {
+            background-color: #2d3748;
+            border-radius: 12px;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .api-input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-grow: 1;
+        }
+
+        .api-input-group label {
+            font-size: 0.9rem;
+            color: #cbd5e0;
+            white-space: nowrap;
+        }
+
+        .input-text {
+            background-color: #1a202c;
+            border: 1px solid #4a5568;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            width: 100%;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .btn {
+            background-color: #4c51bf;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            background-color: #5a67d8;
+        }
+
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-failed {
+            background-color: rgba(245, 101, 101, 0.2);
+            color: #feb2b2;
+            border: 1px solid #f56565;
+        }
+
+        .status-ok {
+            background-color: rgba(72, 187, 120, 0.2);
+            color: #9ae6b4;
+            border: 1px solid #48bb78;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            background-color: #2d3748;
+            border-radius: 12px;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        /* Tabs */
+        .tabs-container {
+            background-color: #2d3748;
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: #a0aec0;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .tab-btn.active {
+            background-color: #4a5568;
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        select.input-text {
+            width: auto;
+            min-width: 120px;
+        }
+
+        /* Content Sections */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Charts Grid */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-card {
+            background-color: #2d3748;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .chart-card h3 {
+            font-size: 1rem;
+            color: #cbd5e0;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Register Form Card (ภาพที่ 2 สไตล์ภาพที่ 1) */
+        .form-card {
+            background-color: #2d3748;
+            border-radius: 12px;
+            padding: 25px;
+            max-width: 600px;
+            margin: 0 auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .form-card h2 {
+            font-size: 1.3rem;
+            color: #b794f4;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #4a5568;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            color: #cbd5e0;
+            margin-bottom: 5px;
+        }
+
+        .result-box {
+            margin-top: 20px;
+            background-color: #1a202c;
+            border: 1px solid #4a5568;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .result-box h4 {
+            color: #a0aec0;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .result-box p {
+            font-size: 0.85rem;
+            color: #e2e8f0;
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <h1>📡 IoT Sensor Dashboard</h1>
+        <p>Real-time Temperature & Humidity Monitoring System</p>
+    </div>
+
+    <!-- API Endpoint Card -->
+    <div class="api-card">
+        <div class="api-input-group">
+            <label>📍 API Endpoint:</label>
+            <input type="text" id="apiEndpoint" class="input-text" value="http://10.13.254.211:8000">
+        </div>
+        <button class="btn" onclick="connectAPI()">🔗 Connect</button>
+        <div id="connectionBadge" class="status-badge status-failed">
+            ❌ Disconnected
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div>System Status : <span id="systemStatus" style="color: #f56565;">● Offline</span></div>
+        <div>Devices Online : <span id="onlineDevices">0 / 3</span></div>
+        <div>Last Update : <span id="lastUpdate">--:--:--</span></div>
+    </div>
+
+    <!-- Tabs Container -->
+    <div class="tabs-container">
+        <div class="tab-buttons">
+            <button class="tab-btn active" onclick="switchTab('realtime', this)">📊 เรียลไทม์</button>
+            <button class="tab-btn" onclick="switchTab('register', this)">📝 ลงทะเบียนอุปกรณ์</button>
+            <button class="tab-btn" onclick="switchTab('history', this)">📜 ย้อนหลัง</button>
+            <button class="tab-btn" onclick="switchTab('summary', this)">📈 สรุป</button>
+        </div>
+
+        <!-- Filter Options (สำหรับหน้าเรียลไทม์) -->
+        <div class="filter-group" id="filterGroup">
+            <label style="font-size: 0.85rem; color: #a0aec0;">อาคาร:</label>
+            <select class="input-text">
+                <option>ทั้งหมด</option>
+                <option>อาคาร A</option>
+            </select>
+            <label style="font-size: 0.85rem; color: #a0aec0;">ชั้น:</label>
+            <select class="input-text">
+                <option>ทุกชั้น</option>
+                <option>ชั้น 1</option>
+            </select>
+            
+        </div>
+    </div>
+
+    <!-- TAB 1: Real-time Graphs -->
+    <div id="tab-realtime" class="tab-content active">
+        <div class="charts-grid">
+            <!-- Temperature Chart -->
+            <div class="chart-card">
+                <h3>🌡️ Temperature <span style="font-size: 0.8rem; color: #a0aec0;">(20 ค่าล่าสุด)</span></h3>
+                <canvas id="tempChart"></canvas>
+            </div>
+            <!-- Humidity Chart -->
+            <div class="chart-card">
+                <h3>💧 Humidity <span style="font-size: 0.8rem; color: #a0aec0;">(20 ค่าล่าสุด)</span></h3>
+                <canvas id="humChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: Register Device (ภาพที่ 2) -->
+    <div id="tab-register" class="tab-content">
+        <div class="form-card">
+            <h2>📝 ลงทะเบียนอุปกรณ์ IoT</h2>
+            <form id="registerForm" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label>Device ID :</label>
+                    <input type="text" id="devId" class="input-text" placeholder="เช่น esp32-01" required>
+                </div>
+                <div class="form-group">
+                    <label>Device Name :</label>
+                    <input type="text" id="devName" class="input-text" placeholder="เช่น temperature-sensor-1" required>
+                </div>
+                <div class="form-group">
+                    <label>Location :</label>
+                    <input type="text" id="devLoc" class="input-text" placeholder="เช่น Room 101" required>
+                </div>
+                <div class="form-group">
+                     <label>Registered By (ผู้ลงทะเบียน/ผู้ใช้งาน) :</label>
+                     <input type="text" id="reg_user" placeholder="เช่น Somchai / POOH">
+                </div>
+                <button type="submit" class="btn" style="width: 100%; margin-top: 10px;">💾 บันทึกข้อมูล</button>
+            </form>
+
+            <!-- Box แสดงผลการลงทะเบียน -->
+            <div class="result-box">
+                <h4>ผลการบันทึกข้อมูล</h4>
+                <p>Status : <span id="resStatus" style="color: #a0aec0;">-</span></p>
+                <p>Message : <span id="resMsg" style="color: #a0aec0;">-</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3 & 4 (Placeholders) -->
+    <div id="tab-history" class="tab-content">
+        <div class="chart-card"><p style="text-align:center; padding: 40px;">📜 ข้อมูลประวัติย้อนหลัง</p></div>
+    </div>
+    <div id="tab-summary" class="tab-content">
+        <div class="chart-card"><p style="text-align:center; padding: 40px;">📈 สรุปรายงานประจำเดือน</p></div>
+    </div>
+</div>
+
+<script>
+    // --- Chart.js Setup ---
+    const maxDataPoints = 20;
+    const timeLabels = [];
+    const tempData = [];
+    const humData = [];
+
+    // Temp Chart
+    const ctxTemp = document.getElementById('tempChart').getContext('2d');
+    const tempChart = new Chart(ctxTemp, {
+        type: 'line',
+        data: {
+            labels: timeLabels,
+            datasets: [{
+                label: 'Temperature (°C)',
+                data: tempData,
+                borderColor: '#f56565',
+                backgroundColor: 'rgba(245, 101, 101, 0.1)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: { ticks: { color: '#a0aec0' }, grid: { color: '#4a5568' } },
+                y: { ticks: { color: '#a0aec0' }, grid: { color: '#4a5568' } }
+            },
+            plugins: { legend: { labels: { color: '#e2e8f0' } } }
+        }
+    });
+
+    // Humidity Chart
+    const ctxHum = document.getElementById('humChart').getContext('2d');
+    const humChart = new Chart(ctxHum, {
+        type: 'line',
+        data: {
+            labels: timeLabels,
+            datasets: [{
+                label: 'Humidity (%)',
+                data: humData,
+                borderColor: '#4299e1',
+                backgroundColor: 'rgba(66, 153, 225, 0.1)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: { ticks: { color: '#a0aec0' }, grid: { color: '#4a5568' } },
+                y: { ticks: { color: '#a0aec0' }, grid: { color: '#4a5568' } }
+            },
+            plugins: { legend: { labels: { color: '#e2e8f0' } } }
+        }
+    });
+
+    // --- Tab Switcher ---
+    function switchTab(tabName, element) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById('tab-' + tabName).classList.add('active');
+        element.classList.add('active');
+
+        const filterGroup = document.getElementById('filterGroup');
+        filterGroup.style.display = (tabName === 'realtime') ? 'flex' : 'none';
+    }
+
+    // --- API & Real-time Functions ---
+    let timer = null;
+
+    async function fetchData() {
+        const baseUrl = document.getElementById('apiEndpoint').value.trim();
+        try {
+            const res = await fetch(`${baseUrl}/api/hvac/telemetry`);
+            if (res.ok) {
+                const data = await res.json();
+                updateUI(true, data);
+            } else {
+                updateUI(false);
+            }
+        } catch (err) {
+            updateUI(false);
+        }
+    }
+
+    function updateUI(isConnected, data = []) {
+        const badge = document.getElementById('connectionBadge');
+        const sysStatus = document.getElementById('systemStatus');
+        const lastUpdate = document.getElementById('lastUpdate');
+        const onlineDevices = document.getElementById('onlineDevices');
+
+        if (isConnected) {
+            badge.className = "status-badge status-ok";
+            badge.innerHTML = "✔ Connected";
+            sysStatus.innerHTML = '<span style="color: #48bb78;">● Online</span>';
+            
+            const now = new Date().toLocaleTimeString();
+            lastUpdate.innerText = now;
+
+            // อัปเดตกราฟถ้ามีข้อมูลเข้ามา
+            if (data.length > 0) {
+                const latest = data[data.length - 1];
+                if (timeLabels.length >= maxDataPoints) {
+                    timeLabels.shift();
+                    tempData.shift();
+                    humData.shift();
+                }
+                timeLabels.push(now);
+                tempData.push(latest.temperature || 0);
+                humData.push(latest.humidity || 0);
+
+                tempChart.update();
+                humChart.update();
+
+                // อัปเดตจำนวนบอร์ดที่ Online
+                const activeCount = data.filter(d => d.is_online).length;
+                onlineDevices.innerText = `${activeCount} / ${data.length}`;
+            }
+        } else {
+            badge.className = "status-badge status-failed";
+            badge.innerHTML = "❌ Connection Failed";
+            sysStatus.innerHTML = '<span style="color: #f56565;">● Offline</span>';
+        }
+    }
+
+    function connectAPI() {
+        if (timer) clearInterval(timer);
+        fetchData();
+        timer = setInterval(fetchData, 3000); // ดึงข้อมูลทุก 3 วินาที
+    }
+
+    // --- Form Register Handler (ภาพที่ 2) ---
+    async function handleRegister(e) {
+    e.preventDefault();
+    const baseUrl = document.getElementById('apiEndpoint').value.trim();
+    const id = document.getElementById('devId').value;
+    const name = document.getElementById('devName').value;
+    const loc = document.getElementById('devLoc').value;
+    const ip = document.getElementById('devIp').value;
+    const user = document.getElementById('reg_user').value;
+
+    try {
+        const res = await fetch(`${baseUrl}/api/device/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                device_id: id,
+                device_name: name,
+                location: loc,
+                ip_address: ip,
+                registered_by: user
+
+            })
+        });
+        const result = await res.json();
+        if (res.ok && result.status === 'success') {
+            document.getElementById('resStatus').innerHTML = '<b style="color: #48bb78;">OK</b>';
+            document.getElementById('resMsg').innerText = result.message;
+            document.getElementById('registerForm').reset();
+        } else {
+            document.getElementById('resStatus').innerHTML = '<b style="color: #f56565;">Error</b>';
+            document.getElementById('resMsg').innerText = result.message || 'บันทึกไม่สำเร็จ';
+        }
+    } catch (err) {
+        document.getElementById('resStatus').innerHTML = '<b style="color: #f56565;">Error</b>';
+        document.getElementById('resMsg').innerText = 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ (กรุณาเช็กว่ารัน FastAPI หรือยัง)';
+    }
+}
+
+    // เริ่มต้นเชื่อมต่ออัตโนมัติเมื่อเปิดหน้า
+    connectAPI();
+</script>
+
+</body>
+</html>
